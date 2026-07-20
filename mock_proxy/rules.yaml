@@ -1,0 +1,36 @@
+# Mock Proxy 장애 주입 규칙
+# 각 규칙은 대상 엔드포인트에 대해 응답을 변조합니다.
+
+rules:
+  - name: "server_error"
+    description: "OSRM 라우팅 API 500 에러 응답"
+    endpoint: "/route/v1/driving/*"
+    enabled: false
+    action:
+      type: status_code
+      value: 500
+      body: '{"code": "InternalError", "message": "Simulated server error"}'
+
+  - name: "slow_response"
+    description: "3초 지연 응답"
+    endpoint: "/route/v1/driving/*"
+    enabled: false
+    action:
+      type: delay
+      seconds: 3
+
+  - name: "empty_route"
+    description: "빈 경로 응답 (좌표 없음)"
+    endpoint: "/route/v1/driving/*"
+    enabled: false
+    action:
+      type: modify_body
+      body: '{"code": "Ok", "routes": [], "waypoints": []}'
+
+  - name: "malformed_json"
+    description: "잘못된 JSON 응답"
+    endpoint: "/route/v1/driving/*"
+    enabled: false
+    action:
+      type: modify_body
+      body: '{"broken": true, "routes": [{"geometry": null}]}'

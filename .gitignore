@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual env
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test output
+allure-results/
+allure-report/
+*.gpx
+!tests/fixtures/*.gpx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
