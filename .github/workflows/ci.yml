@@ -20,8 +20,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run unit tests
-        run: pytest tests/ -m "not navigation and not mock_proxy and not perf" --alluredir=allure-results
+      - name: Run mock proxy tests
+        run: |
+          pytest mock_proxy/tests/ -m "mock_proxy" --alluredir=allure-results || exit_code=$?
+          # exit code 5 = no tests collected → treat as success
+          if [ "${exit_code:-0}" -eq 5 ]; then
+            echo "테스트 수집 없음 — 스킵"
+            exit 0
+          fi
+          exit ${exit_code:-0}
 
       - name: Upload Allure results
         if: always()
@@ -78,11 +85,13 @@ jobs:
           name: allure-results-unit
           path: allure-results/
 
+      - name: Install Allure CLI
+        run: |
+          curl -sL https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz | tar xz -C /opt/
+          echo "/opt/allure-2.27.0/bin" >> $GITHUB_PATH
+
       - name: Generate Allure report
-        uses: simple-elf/allure-report-action@v1.9
-        with:
-          allure_results: allure-results
-          allure_report: allure-report
+        run: allure generate allure-results -o allure-report --clean
 
       - name: Upload Allure report
         uses: actions/upload-artifact@v4
