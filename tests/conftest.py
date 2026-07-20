@@ -7,7 +7,7 @@ import pytest
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
 
-from gpx_player.player import AdbBackend, GpxPlayer
+from gpx_player.player import AppiumBackend, GpxPlayer
 
 
 # ── Appium 설정 ──────────────────────────────────────────────
@@ -18,7 +18,7 @@ DEFAULT_CAPS = {
     "platformName": "Android",
     "automationName": "UiAutomator2",
     "appPackage": "com.skt.tmap.ku",
-    "appActivity": "com.skt.tmap.activity.TmapSplashActivity",
+    "appActivity": "com.skt.tmap.activity.TmapIntroActivity",
     "noReset": True,           # 로그인 상태 유지
     "autoGrantPermissions": True,
     "newCommandTimeout": 300,
@@ -49,27 +49,21 @@ def appium_driver():
 
 
 @pytest.fixture
-def adb_backend() -> AdbBackend:
-    """ADB 기반 좌표 주입 백엔드."""
-    return AdbBackend()
-
-
-@pytest.fixture
-def player_factory(adb_backend):
-    """GPX Player 팩토리 — gpx_path를 인자로 받아 Player 생성.
+def player_factory(appium_driver):
+    """GPX Player 팩토리 — Appium set_location 기반 좌표 주입.
 
     사용: player = player_factory("route.gpx", speed_multiplier=2.0)
     """
+    backend = AppiumBackend(appium_driver)
     players: list[GpxPlayer] = []
 
     def _create(gpx_path: str, speed_multiplier: float = 2.0) -> GpxPlayer:
-        player = GpxPlayer(gpx_path, adb_backend, speed_multiplier=speed_multiplier)
+        player = GpxPlayer(gpx_path, backend, speed_multiplier=speed_multiplier)
         players.append(player)
         return player
 
     yield _create
 
-    # 테스트 종료 시 모든 플레이어 정지
     for p in players:
         p.stop()
 
